@@ -29,3 +29,15 @@ class RequestManager(object):
         r = requests.request('GET', url, headers=headers)
         resp = {"response": r.json(), "code": r.status_code}
         return resp
+
+    @staticmethod
+    def delete_request(url, headers):
+        """
+        Function sends DELETE request with headers to API
+        :param url: url to send request
+        :param headers: headers to include with DELETE request
+        :return: response from server
+        """
+        r = requests.request('DELETE', url, headers=headers)
+        resp = {"response": r.json(), "code": r.status_code}
+        return resp

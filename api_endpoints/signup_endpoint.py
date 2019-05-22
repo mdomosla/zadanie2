@@ -27,4 +27,4 @@ class SignupMethods:
             "lastname": lastname
         }
         result = self.rm.post_request(url=self.url, data=data, headers=self.headers)
-        return data, result
+        return [data, result]

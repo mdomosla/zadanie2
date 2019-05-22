@@ -24,6 +24,7 @@ class ViewThreadsTest(BaseTest):
                                               private=False)
 
     def setUp(self):
+        BaseTest.setUp(self)
         self.threads_url = self.CONFIG['API_ADDRESS'] + '/threads'
 
     def test_01_get_last_threads(self):
@@ -49,7 +50,7 @@ class ViewThreadsTest(BaseTest):
 
     def test_02_get_last_100_threads(self):
         logging.info('Generating 100 threads')
-        for i in range(0, 101):
+        for i in range(0, 102):
             sample_thread = self.rand.generate_random_string(10)
             ThreadsMethods().create_sample_thread(authorization=self.thread_auth_headers, thread_name=sample_thread,
                                                   private=False)

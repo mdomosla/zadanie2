@@ -10,6 +10,7 @@ class SignupTest(BaseTest):
     rm = RequestManager()
 
     def setUp(self):
+        BaseTest.setUp(self)
         self.url = self.CONFIG['API_ADDRESS'] + '/signup'
         self.headers = {'Content-Type': 'application/vnd.api+json'}
         self.signup = SignupMethods()

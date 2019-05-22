@@ -31,3 +31,9 @@ class ThreadsMethods:
         headers['Content-Type'] = 'application/json'
         result = self.rm.get_request(url=self.thread_url + '/' + thread_id, headers=headers)
         return result
+
+    def delete_thread(self, authorization, thread_id):
+        headers = authorization
+        headers['Content-Type'] = 'application/json'
+        result = self.rm.delete_request(url=self.thread_url + '/' + thread_id, headers=headers)
+        return result

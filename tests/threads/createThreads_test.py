@@ -21,7 +21,9 @@ class CreateThreadsTest(BaseTest):
         cls.thread_headers = {'Authorization': 'Basic ' + encoded_credentials}
 
     def setUp(self):
+        BaseTest.setUp(self)
         self.threads_url = self.CONFIG['API_ADDRESS'] + '/threads'
+        self.thread_id = None
 
     def test_01_create_public_thread(self):
         sample_thread = self.rand.generate_random_string(34) + self.rand.get_date()
@@ -41,9 +43,9 @@ class CreateThreadsTest(BaseTest):
         result['response']['private'] | should.be.a(bool)
         result['response']['private'] | should.be.false
         result['response']['deleted'] | should.be.a(bool)
-        thread_id = result['response']['id']
+        self.thread_id = result['response']['id']
         logging.info('Trying to get created thread')
-        result = ThreadsMethods().get_thread(authorization=self.thread_headers, thread_id=thread_id)
+        result = ThreadsMethods().get_thread(authorization=self.thread_headers, thread_id=self.thread_id)
         logging.info('Server responded with %s' % result)
         result['code'] | should.be.equal.to(200)
         result['response']['createdAt'] | should.be.a(int)
@@ -76,9 +78,9 @@ class CreateThreadsTest(BaseTest):
         result['response']['private'] | should.be.a(bool)
         result['response']['private'] | should.be.true
         result['response']['deleted'] | should.be.a(bool)
-        thread_id = result['response']['id']
+        self.thread_id = result['response']['id']
         logging.info('Trying to get created thread')
-        result = ThreadsMethods().get_thread(authorization=self.thread_headers, thread_id=thread_id)
+        result = ThreadsMethods().get_thread(authorization=self.thread_headers, thread_id=self.thread_id)
         logging.info('Server responded with %s' % result)
         result['code'] | should.be.equal.to(200)
         result['response']['createdAt'] | should.be.a(int)
@@ -127,6 +129,7 @@ class CreateThreadsTest(BaseTest):
                                                        private=False)
         logging.info('Server responded with %s' % result)
         result['code'] | should.be.equal.to(200)
+        self.thread_id = result['response']['id']
         logging.info('Trying to create thread with the same name')
         result = ThreadsMethods().create_sample_thread(authorization=self.thread_headers, thread_name=sample_thread,
                                                        private=False)
@@ -166,3 +169,9 @@ class CreateThreadsTest(BaseTest):
         logging.info('Server responded with %s' % result)
         result['code'] | should.be.equal.to(422)
         result['response']['message'].lower() | should.contain('private should be bool')
+
+    def tearDown(self):
+        if self.thread_id is not None:
+            logging.info('Cleaning up, deleting sample thread')
+            ThreadsMethods().delete_thread(authorization=self.thread_headers, thread_id=self.thread_id)
+        BaseTest.tearDown(self)
