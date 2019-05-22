@@ -5,6 +5,7 @@ from grappa import should
 from api_endpoints.signup_endpoint import SignupMethods
 from api_endpoints.threads_endpoint import ThreadsMethods
 from lib.data_encoder import Encoder
+from json.decoder import JSONDecodeError
 
 
 class CreateThreadsTest(BaseTest):
@@ -169,6 +170,17 @@ class CreateThreadsTest(BaseTest):
         logging.info('Server responded with %s' % result)
         result['code'] | should.be.equal.to(422)
         result['response']['message'].lower() | should.contain('private should be bool')
+
+    def test_10_create_thread_by_non_existing_user(self):
+        sample_thread = self.rand.get_date() + self.rand.generate_random_string(10)
+        logging.info('Trying to create thread with private setting as int')
+        thread_headers = {'Authorization': 'Basic ' + self.rand.generate_random_string(10)}
+        try:
+            result = ThreadsMethods().create_sample_thread(authorization=thread_headers, thread_name=sample_thread)
+            result | should.be.none
+        except JSONDecodeError as e:
+            logging.info('Server responded with %s' % e.doc)
+            e.doc.lower() | should.contain('unauthorized access')
 
     def tearDown(self):
         if self.thread_id is not None:
