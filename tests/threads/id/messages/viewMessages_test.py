@@ -78,3 +78,66 @@ class ViewMessagesTest(BaseTest):
         logging.info('Server returned %s' % result)
         result['code'] | should.be.equal.to(200)
         len(result['response']['items']) | should.be.equal.to(100)
+
+    def test_03_view_messages_as_non_invited_user(self):
+        account_data = SignupMethods().create_test_account(generate_fields=True)
+        data_to_encode = account_data[0]['username'] + ':' + account_data[0]['password']
+        encoded_credentials = self.encoder.encode_data(data_to_encode)
+        thread_auth_headers = {'Authorization': 'Basic ' + encoded_credentials}
+        logging.info('Getting messages list from thread %s' % self.thread_id)
+        result = MessageMethods(self.thread_id).view_messages(authorization=thread_auth_headers)
+        logging.info('Server returned %s' % result)
+        result['code'] | should.be.equal.to(403)
+        result['response']['message'].lower() | should.contain('is not a member of the thread')
+
+    def test_04_view_messages_as_invited_user(self):
+        account_data = SignupMethods().create_test_account(generate_fields=True)
+        account_id = account_data[1]['response']['id']
+        data_to_encode = account_data[0]['username'] + ':' + account_data[0]['password']
+        encoded_credentials = self.encoder.encode_data(data_to_encode)
+        thread_auth_headers = {'Authorization': 'Basic ' + encoded_credentials}
+        logging.info('Inviting user to thread %s' % self.thread_id)
+        result = ThreadsMethods().invite_user_to_thread(authorization=self.thread_auth_headers,
+                                                        thread_id=self.thread_id,
+                                                        user_id=account_id)
+        logging.info('Server returned %s' % result)
+        invitation_id = result['response'][0]['id']
+        logging.info('Getting messages list from thread %s' % self.thread_id)
+        result = MessageMethods(self.thread_id).view_messages(authorization=thread_auth_headers)
+        logging.info('Server returned %s' % result)
+        result['code'] | should.be.equal.to(403)
+        result['response']['message'].lower() | should.contain('is not a member of the thread')
+        logging.info('Accepting invitation to a thread %s' % self.thread_id)
+        result = ThreadsMethods().accept_invitation_to_thread(authorization=thread_auth_headers,
+                                                              invitation_id=invitation_id, accept=True)
+        logging.info('Server returned %s' % result)
+        logging.info('Getting messages list from thread %s' % self.thread_id)
+        result = MessageMethods(self.thread_id).view_messages(authorization=thread_auth_headers)
+        logging.info('Server returned %s' % result)
+        result['code'] | should.be.equal.to(200)
+
+    def test_05_view_messages_as_kicked_user(self):
+        account_data = SignupMethods().create_test_account(generate_fields=True)
+        account_id = account_data[1]['response']['id']
+        data_to_encode = account_data[0]['username'] + ':' + account_data[0]['password']
+        encoded_credentials = self.encoder.encode_data(data_to_encode)
+        thread_auth_headers = {'Authorization': 'Basic ' + encoded_credentials}
+        logging.info('Inviting user to thread %s' % self.thread_id)
+        result = ThreadsMethods().invite_user_to_thread(authorization=self.thread_auth_headers,
+                                                        thread_id=self.thread_id,
+                                                        user_id=account_id)
+        logging.info('Server returned %s' % result)
+        invitation_id = result['response'][0]['id']
+        logging.info('Accepting invitation to a thread %s' % self.thread_id)
+        result = ThreadsMethods().accept_invitation_to_thread(authorization=thread_auth_headers,
+                                                              invitation_id=invitation_id, accept=True)
+        logging.info('Server returned %s' % result)
+        logging.info('Kicking user from a thread %s' % self.thread_id)
+        result = ThreadsMethods().kick_user_from_thread(authorization=self.thread_auth_headers,
+                                                        thread_id=self.thread_id, user_id=account_id)
+        logging.info('Server returned %s' % result)
+        logging.info('Getting messages list from thread %s' % self.thread_id)
+        result = MessageMethods(self.thread_id).view_messages(authorization=thread_auth_headers)
+        logging.info('Server returned %s' % result)
+        result['code'] | should.be.equal.to(403)
+        result['response']['message'].lower() | should.contain('is not a member of the thread')
